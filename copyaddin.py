@@ -8,7 +8,8 @@ from pathlib import Path
 
 def GetAddinListFromBootFile() -> list:
     """Extract addin name-version pairs from bootstrap log file"""
-    pattern = r'\[App\.AddinMgr\] Loaded AddIn (\w+) \(ver\. ([\d\.]+)(?:\.)?d(\d+)\)'
+    #pattern = r'\[App\.AddinMgr\] Loaded AddIn (\w+) \(ver\. ([\d\.]+)(?:\.)?d(\d+)\)'
+    pattern = r'\[App\.AddinMgr\] Loaded AddIn (.*) \(ver\. ([\d\.]+)(?:\.)?d(\d+)\)'
     result = []
     
     logs = list(Path('.').glob('Bootstrap_*.log'))
@@ -20,6 +21,7 @@ def GetAddinListFromBootFile() -> list:
         for line in f:
             if match := re.search(pattern, line):
                 name, ver, dev = match.groups()
+                name = name.replace(' ', '')
                 version = f"{ver}.{dev}"
                 result.append((name, version))
     
@@ -137,6 +139,31 @@ def print_hyperlink(pref, path):
     print(f'\x1b]8;;file:///{full_path}\x1b\\{path}\x1b]8;;\x1b\\')
 
 
+def rename(a, map_rename):
+    """
+    Rinomina gli elementi in una lista di tuple in base a una mappa di rinomina.
+    
+    Args:
+        a: Lista di tuple nella forma [(nome, valore), ...]
+        map_rename: Lista di tuple nella forma [(vecchio_nome, nuovo_nome), ...]
+    
+    Returns:
+        Lista di tuple con i nomi aggiornati
+    """
+    # Creiamo un dizionario dalla mappa di rinomina per un accesso più efficiente
+    rename_dict = dict(map_rename)
+    
+    # Creiamo una nuova lista con i nomi aggiornati
+    result = []
+    for nome, valore in a:
+        # Se il nome è presente nella mappa di rinomina, usiamo il nuovo nome
+        # altrimenti manteniamo il nome originale
+        nuovo_nome = rename_dict.get(nome, nome)
+        result.append((nuovo_nome, valore))
+    
+    return result
+
+
 def main():
     print("COPYADDIN: Select Component Source:")
     print("   [M]: ModuleList.txt")
@@ -149,6 +176,10 @@ def main():
         comp_list = GetAddinListFromBootFile()
     if(key.upper()=='M'):
         comp_list = GetAddinListFromModuleFile()
+
+    map_rename =  [('BasketTrading','MMBasket'), ('Derivatives','MMDerivatives'), ('RFQConfig','RFQConf'), ('',''), ('','')]
+    comp_list = rename(comp_list, map_rename)
+
     print('Working ...')
     SyncAddinFromBoot(comp_list)
     print(f'log (CTRL-Click):')
