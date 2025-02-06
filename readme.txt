@@ -12,3 +12,5 @@ COPYADDIN USE:
 Note:
 Il ModuleList.txt puo essere incompleto
 Il Bootstrap_ non contiene dll librerie
+
+(exported in: V:\dev-tools\CopyAddin)
